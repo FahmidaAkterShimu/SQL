@@ -26,7 +26,7 @@ group by customer_id, pizza_name
 order by customer_id;
 
 # 6.What was the maximum number of pizzas delivered in a single order?
-select count(c.pizza_id) max_pizzas
+select c.order_id,count(c.pizza_id) max_pizzas
 from customer_orders c
          left join runner_orders r on c.order_id = r.order_id
 where pickup_time is not null
@@ -35,6 +35,21 @@ order by max_pizzas desc
 limit 1;
 
 # 7.For each customer, how many delivered pizzas had at least 1 change and how many had no changes?
+select customer_id,
+       count(
+               case
+                   when exclusions is not null or extras is not null then 1
+                   end) as No_of_Pizzas_with_changes,
+       count(
+               case
+                   when exclusions is null and extras is null then 1
+                   end) as No_of_Pizzas_without_changes
+from (select customer_id, exclusions, extras
+      from customer_orders c
+               left join runner_orders r on c.order_id = r.order_id
+      where cancellation is null) t
+group by customer_id
+order by customer_id;
 
 
 # 8.How many pizzas were delivered that had both exclusions and extras?
