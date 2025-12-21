@@ -61,12 +61,30 @@ order by customer_id;
 # 8.How many pizzas were delivered that had both exclusions and extras?
 select count(pizza_id) as both_exclusion_extras
 from customer_orders c
-left join runner_orders r on c.order_id = r.order_id
-where exclusions is not null and extras is not null and cancellation is null
+         left join runner_orders r on c.order_id = r.order_id
+where exclusions is not null
+  and extras is not null
+  and cancellation is null;
 
 
 # 9.What was the total volume of pizzas ordered for each hour of the day?
-
+select extract(day from order_time)  as Date,
+       extract(hour from order_time) as Hour_of_day,
+       count(pizza_id)               as Volume_of_pizzas
+from customer_orders
+group by date, hour_of_day;
 
 
 # 10.What was the volume of orders for each day of the week?
+select week, Day, Date, Volume_of_pizzas
+from (select extract(day from order_time)            as Date,
+             row_number() over (partition by 'Date') as Day,
+             count(order_id)                         as Volume_of_pizzas,
+             case
+                 when count('day') <= 7 then 1
+                 when count('day') <= 14 then 2
+                 when count('day') <= 21 then 3
+                 when count('day') <= 28 then 4
+                 end                                 as Week
+      from customer_orders
+      group by Date) t;
