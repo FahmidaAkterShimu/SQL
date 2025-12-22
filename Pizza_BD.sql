@@ -68,23 +68,17 @@ where exclusions is not null
 
 
 # 9.What was the total volume of pizzas ordered for each hour of the day?
-select extract(day from order_time)  as Date,
-       extract(hour from order_time) as Hour_of_day,
-       count(pizza_id)               as Volume_of_pizzas
+select date(order_time)              as Day,
+       extract(hour from order_time) as Hour,
+       count(pizza_id)               as No_of_Pizzas_Ordered
 from customer_orders
-group by date, hour_of_day;
+group by Day, Hour;
 
 
 # 10.What was the volume of orders for each day of the week?
-select week, Day, Date, Volume_of_pizzas
-from (select extract(day from order_time)            as Date,
-             row_number() over (partition by 'Date') as Day,
-             count(order_id)                         as Volume_of_pizzas,
-             case
-                 when count('day') <= 7 then 1
-                 when count('day') <= 14 then 2
-                 when count('day') <= 21 then 3
-                 when count('day') <= 28 then 4
-                 end                                 as Week
+select ceiling(d / 7) as Week, Day, Ordered
+from (select date(order_time)                        as day,
+             count(order_id)                         as Ordered,
+             rank() over (order by date(order_time)) as d
       from customer_orders
-      group by Date) t;
+      group by Day) as t;
